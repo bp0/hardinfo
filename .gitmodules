@@ -1,0 +1,4 @@
+[submodule "deps/verbose-spork"]
+	path = deps/verbose-spork
+	url = https://github.com/bp0/verbose-spork.git
+	branch = forhi
