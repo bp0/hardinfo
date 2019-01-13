@@ -22,13 +22,14 @@
 
 #include "hardinfo.h"
 #include "devices.h"
-#include "gpu_util.h"
+//#include "gpu_util.h"
 
 void scan_gpu_do(void);
 
 gchar *gpu_list = NULL;
 gchar *gpu_summary = NULL;
 
+#if 0
 void gpu_summary_add(const char *gpu_name) {
     if (strlen(gpu_summary) == 0) {
         /* first one */
@@ -228,7 +229,7 @@ int _dt_soc_gpu(gpud *gpu) {
              /* Status */  "%s=%s\n"
              /* Name */    "%s=%s\n",
                 _("Device Information"),
-                _("Location"), gpu->location,
+                _("Location"), location,
                 _("Vendor"), vendor,
                 _("Device"), device,
                 _("Clocks"),
@@ -245,6 +246,21 @@ int _dt_soc_gpu(gpud *gpu) {
     g_free(opp_str);
     return 1;
 }
+#endif
+
+void gpu_add(sysobj *gpu) {
+
+    gchar *nice_name = sysobj_format(gpu, params.fmt_opts);
+    gchar *key = g_strdup_printf("GPU-%s", gpu->name);
+
+    gpu_list = h_strdup_cprintf("$!%s$%s=%s\n", gpu_list, key, gpu->name, nice_name);
+    gchar *str = g_strdup_printf("[%s]\n",
+                _("Device Information")
+                );
+
+    moreinfo_add_with_prefix("DEV", key, str); /* str now owned by morinfo */
+
+}
 
 void scan_gpu_do(void) {
     if (gpu_summary)
@@ -253,26 +269,22 @@ void scan_gpu_do(void) {
         moreinfo_del_with_prefix("DEV:GPU");
         g_free(gpu_list);
     }
-    gpu_summary = strdup("");
     gpu_list = g_strdup_printf("[%s]\n", _("GPUs"));
+    gpu_summary = sysobj_format_from_fn(":/gpu", NULL, params.fmt_opts | FMT_OPT_LIST_ITEM);
 
-    gpud *gpus = gpu_get_device_list();
-    gpud *curr = gpus;
-
-    int c = gpud_list_count(gpus);
-
-    if (c > 0) {
-        while(curr) {
-            if (curr->pci_dev) {
-                _gpu_pci_dev(curr);
-            }
-            if (curr->dt_compat) {
-                _dt_soc_gpu(curr);
-            }
-            curr=curr->next;
+    int c = 0;
+    sysobj *gpus = sysobj_new_fast(":/gpu");
+    if (gpus->exists) {
+        sysobj_read(gpus, FALSE);
+        GSList *l =  gpus->data.childs;
+        for(; l; l = l->next) {
+            sysobj *gpu = sysobj_new_from_fn(gpus->path, l->data);
+            gpu_add(gpu);
+            sysobj_free(gpu);
+            c++;
         }
     }
-    gpud_list_free(gpus);
+    sysobj_free(gpus);
 
     if (c)
         gpu_list = g_strconcat(gpu_list, "[$ShellParam$]\n", "ViewType=1\n", NULL);

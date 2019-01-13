@@ -1639,7 +1639,7 @@ static void shell_summary_add_item(ShellSummary *summary,
 {
      GtkWidget *frame;
      GtkWidget *frame_label_box;
-     GtkWidget *frame_image;
+     GtkWidget *frame_image = NULL;
      GtkWidget *frame_label;
      GtkWidget *content;
      GtkWidget *alignment;
@@ -1652,28 +1652,38 @@ static void shell_summary_add_item(ShellSummary *summary,
      gtk_frame_set_shadow_type(GTK_FRAME(frame),
                                GTK_SHADOW_NONE);
 
+    if (*name == '#')
+        name = NULL;
+
 #if GTK_CHECK_VERSION(3, 0, 0)
      frame_label_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
 #else
      frame_label_box = gtk_hbox_new(FALSE, 5);
 #endif
-     frame_image = icon_cache_get_image(icon);
-     frame_label = gtk_label_new(name);
-     gtk_label_set_use_markup(GTK_LABEL(frame_label), TRUE);
-     gtk_box_pack_start(GTK_BOX(frame_label_box), frame_image, FALSE, FALSE, 0);
-     gtk_box_pack_start(GTK_BOX(frame_label_box), frame_label, FALSE, FALSE, 0);
+    if (icon) {
+        frame_image = icon_cache_get_image(icon);
+        gtk_box_pack_start(GTK_BOX(frame_label_box), frame_image, FALSE, FALSE, 0);
+    }
 
-     content = gtk_label_new(temp);
+    if (name) {
+        frame_label = gtk_label_new(name);
+        gtk_label_set_use_markup(GTK_LABEL(frame_label), TRUE);
+        gtk_box_pack_start(GTK_BOX(frame_label_box), frame_label, FALSE, FALSE, 0);
+    }
+
+     content = gtk_label_new(NULL);
+     gtk_label_set_markup(GTK_LABEL(content), temp);
      /* TODO:GTK3 gtk_alignment_new(), etc is deprecated from 3.14 */
 #if GTK_CHECK_VERSION(3, 0, 0)
      GtkWidget *frame_box;
      frame_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-     gtk_widget_set_margin_start(GTK_WIDGET(frame_box), 48);
+    if (name)
+        gtk_widget_set_margin_start(GTK_WIDGET(frame_box), 48);
      gtk_box_pack_start(GTK_BOX(frame_box), content, FALSE, FALSE, 0);
      gtk_container_add(GTK_CONTAINER(frame), frame_box);
 #else
      alignment = gtk_alignment_new(0.5, 0.5, 1, 1);
-     gtk_alignment_set_padding(GTK_ALIGNMENT(alignment), 0, 0, 48, 0);
+     gtk_alignment_set_padding(GTK_ALIGNMENT(alignment), 0, 0, (name ? 48 : 0), 0);
      gtk_widget_show(alignment);
      gtk_container_add(GTK_CONTAINER(frame), alignment);
      gtk_misc_set_alignment(GTK_MISC(content), 0.0, 0.5);
@@ -1750,15 +1760,26 @@ static void shell_show_summary(void)
          groups = g_key_file_get_groups(keyfile, NULL);
 
          for (group = 0; groups[group]; group++) {
-             gchar *icon, *method, *method_result;
+             gchar *icon = NULL, *method = NULL, *method_result = NULL,
+                *so_path = NULL, *so_fmtopts = NULL;
 
              shell_status_pulse();
 
              icon = g_key_file_get_string(keyfile, groups[group], "Icon", NULL);
              method = g_key_file_get_string(keyfile, groups[group], "Method", NULL);
-             if (method) {
+             if (method)
                   method_result = module_call_method(method);
-             } else {
+
+            if (!method_result) {
+                so_path = g_key_file_get_string(keyfile, groups[group], "SOFormat", NULL);
+                so_fmtopts = g_key_file_get_string(keyfile, groups[group], "SOFormatOpts", NULL);
+                int fmt_opts = so_fmtopts ? atoi(so_fmtopts) : params.fmt_opts;
+
+                if (so_path)
+                    method_result = sysobj_format_from_fn(so_path, NULL, fmt_opts);
+            }
+
+             if(!method_result) {
                   method_result = g_strdup("N/A");
              }
 

@@ -393,6 +393,7 @@ void parameters_init(int *argc, char ***argv, ProgramParameters * param)
     static gchar *report_format = NULL;
     static gchar *run_benchmark = NULL;
     static gchar *result_format = NULL;
+    static gchar *alt_root = NULL;
     static gchar **use_modules = NULL;
     static gint max_bench_results = 10;
 
@@ -471,6 +472,12 @@ void parameters_init(int *argc, char ***argv, ProgramParameters * param)
 	 .arg = G_OPTION_ARG_NONE,
 	 .arg_data = &force_all_details,
 	 .description = N_("show all details")},
+	{
+	 .long_name = "alt-root",
+	 .short_name = 'z',
+	 .arg = G_OPTION_ARG_STRING,
+	 .arg_data = &alt_root,
+	 .description = N_("point to a directory to use as root")},
 	{NULL}
     };
     GOptionContext *ctx;
@@ -485,9 +492,9 @@ void parameters_init(int *argc, char ***argv, ProgramParameters * param)
     g_option_context_free(ctx);
 
     if (*argc >= 2) {
-	g_print(_("Unrecognized arguments.\n"
-		"Try ``%s --help'' for more information.\n"), *(argv)[0]);
-	exit(1);
+        g_print(_("Unrecognized arguments.\n"
+            "Try ``%s --help'' for more information.\n"), *(argv)[0]);
+        exit(1);
     }
 
     param->create_report = create_report;
@@ -502,6 +509,7 @@ void parameters_init(int *argc, char ***argv, ProgramParameters * param)
     param->run_xmlrpc_server = run_xmlrpc_server;
     param->skip_benchmarks = skip_benchmarks;
     param->force_all_details = force_all_details;
+    param->alt_root = alt_root;
     param->argv0 = *(argv)[0];
 
     if (report_format) {
@@ -511,18 +519,27 @@ void parameters_init(int *argc, char ***argv, ProgramParameters * param)
             param->report_format = REPORT_FORMAT_SHELL;
     }
 
-    /* html ok?
+    /* markup ok?
      * gui: yes
      * report html: yes
      * report text: no
      * anything else? */
-    param->markup_ok = TRUE;
-    if (param->create_report && param->report_format != REPORT_FORMAT_HTML)
+    param->fmt_opts = FMT_OPT_NO_JUNK;
+    if (param->create_report) {
         param->markup_ok = FALSE;
+        if (param->report_format == REPORT_FORMAT_HTML) {
+            param->markup_ok = TRUE;
+            param->fmt_opts |= FMT_OPT_HTML;
+        } else if (isatty(fileno(stdout)) )
+            param->fmt_opts |= FMT_OPT_ATERM;
+    } else {
+        param->markup_ok = TRUE;
+        param->fmt_opts |= FMT_OPT_PANGO;
+    }
 
     gchar *confdir = g_build_filename(g_get_user_config_dir(), "hardinfo", NULL);
     if (!g_file_test(confdir, G_FILE_TEST_EXISTS)) {
-	mkdir(confdir, 0744);
+        mkdir(confdir, 0744);
     }
     g_free(confdir);
 }
@@ -1208,52 +1225,27 @@ h_hash_table_remove_all(GHashTable *hash_table)
 gfloat
 h_sysfs_read_float(gchar *endpoint, gchar *entry)
 {
-	gchar *tmp, *buffer;
-	gfloat return_value = 0.0f;
-
-	tmp = g_build_filename(endpoint, entry, NULL);
-	if (g_file_get_contents(tmp, &buffer, NULL, NULL))
-		return_value = atof(buffer);
-
-	g_free(tmp);
-	g_free(buffer);
-
-	return return_value;
+    gchar *tmp = sysobj_raw_from_fn(endpoint, entry);
+    gfloat ret = atof(tmp);
+    g_free(tmp);
+    return ret;
 }
 
 gint
 h_sysfs_read_int(gchar *endpoint, gchar *entry)
 {
-	gchar *tmp, *buffer;
-	gint return_value = 0;
-
-	tmp = g_build_filename(endpoint, entry, NULL);
-	if (g_file_get_contents(tmp, &buffer, NULL, NULL))
-		return_value = atoi(buffer);
-
-	g_free(tmp);
-	g_free(buffer);
-
-	return return_value;
+    gchar *tmp = sysobj_raw_from_fn(endpoint, entry);
+    gint ret = atoi(tmp);
+    g_free(tmp);
+    return ret;
 }
 
 gchar *
 h_sysfs_read_string(gchar *endpoint, gchar *entry)
 {
-	gchar *tmp, *return_value;
-
-	tmp = g_build_filename(endpoint, entry, NULL);
-	if (!g_file_get_contents(tmp, &return_value, NULL, NULL)) {
-		g_free(return_value);
-
-		return_value = NULL;
-	} else {
-		return_value = g_strstrip(return_value);
-	}
-
-	g_free(tmp);
-
-	return return_value;
+    gchar *ret = sysobj_raw_from_fn(endpoint, entry);
+    if (ret) g_strchomp(ret);
+    return ret;
 }
 
 static GHashTable *_moreinfo = NULL;

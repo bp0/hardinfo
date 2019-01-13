@@ -24,8 +24,9 @@
 #include <iconcache.h>
 #include <stock.h>
 #include <vendor.h>
-
 #include <binreloc.h>
+
+#include "sysobj.h"
 
 ProgramParameters params = { 0 };
 
@@ -74,22 +75,30 @@ int main(int argc, char **argv)
 
     /* list all module names */
     if (params.list_modules) {
-	g_print(_("Modules:\n"
-		"%-20s %-15s %-12s\n"), _("File Name"), _("Name"), _("Version"));
+        g_print(_("Modules:\n"
+            "%-20s %-15s %-12s\n"), _("File Name"), _("Name"), _("Version"));
 
-	for (modules = modules_load_all(); modules;
-	     modules = modules->next) {
-	    ShellModule *module = (ShellModule *) modules->data;
-	    ModuleAbout *ma = module_get_about(module);
-	    gchar *name = g_path_get_basename(g_module_name(module->dll));
+        for (modules = modules_load_all(); modules;
+             modules = modules->next) {
+            ShellModule *module = (ShellModule *) modules->data;
+            ModuleAbout *ma = module_get_about(module);
+            gchar *name = g_path_get_basename(g_module_name(module->dll));
 
-	    g_print("%-20s %-15s %-12s\n", name, module->name, ma->version);
+            g_print("%-20s %-15s %-12s\n", name, module->name, ma->version);
 
-	    g_free(name);
-	}
+            g_free(name);
+        }
 
-	return 0;
+        return 0;
     }
+
+    gchar *config_dir = util_build_fn(g_get_user_config_dir(), "sysobj");
+    sysobj_append_data_path(config_dir);
+    sysobj_append_data_path("/usr/share/misc/");
+    sysobj_append_data_path("/usr/share/hwdata/");
+    sysobj_append_data_path(params.path_data);
+    g_free(config_dir);
+    sysobj_init(params.alt_root);
 
     if (!params.create_report && !params.run_benchmark) {
         /* we only try to open the UI if the user didn't ask for a report. */
@@ -106,13 +115,13 @@ int main(int argc, char **argv)
     }
 
     if (params.use_modules) {
-	/* load only selected modules */
-	DEBUG("loading user-selected modules");
-	modules = modules_load_selected();
+        /* load only selected modules */
+        DEBUG("loading user-selected modules");
+        modules = modules_load_selected();
     } else {
-	/* load all modules */
-	DEBUG("loading all modules");
-	modules = modules_load_all();
+        /* load all modules */
+        DEBUG("loading all modules");
+        modules = modules_load_all();
     }
 
     /* initialize vendor database */
@@ -134,33 +143,35 @@ int main(int argc, char **argv)
           g_free(result);
         }
     } else if (params.gui_running) {
-	/* initialize gui and start gtk+ main loop */
-	icon_cache_init();
-	stock_icons_init();
+        /* initialize gui and start gtk+ main loop */
+        icon_cache_init();
+        stock_icons_init();
 
-	shell_init(modules);
+        shell_init(modules);
 
-	DEBUG("entering gtk+ main loop");
+        DEBUG("entering gtk+ main loop");
 
-	gtk_main();
+        gtk_main();
     } else if (params.create_report) {
-	/* generate report */
-	gchar *report;
+        /* generate report */
+        gchar *report;
 
-	DEBUG("generating report");
+        DEBUG("generating report");
 
-	report = report_create_from_module_list_format(modules,
-						       params.
-						       report_format);
-	g_print("%s", report);
+        report = report_create_from_module_list_format(modules,
+                                   params.
+                                   report_format);
+        g_print("%s", report);
 
-	g_free(report);
+        g_free(report);
     } else {
         g_error(_("Don't know what to do. Exiting."));
     }
 
     moreinfo_shutdown();
     vendor_cleanup();
+
+    sysobj_cleanup();
 
     DEBUG("finished");
     return exit_code;

@@ -456,7 +456,10 @@ GSList *processor_scan(void)
     FILE *cpuinfo;
     gchar buffer[PROC_SCAN_READ_BUFFER_SIZE];
 
-    cpuinfo = fopen(PROC_CPUINFO, "r");
+    sysobj *cpuinfo_obj = sysobj_new_fast(PROC_CPUINFO);
+    auto_free_ex(cpuinfo_obj, (GDestroyNotify)sysobj_free);
+
+    cpuinfo = fopen(cpuinfo_obj->path_fs, "r");
     if (!cpuinfo)
         return NULL;
 

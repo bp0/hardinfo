@@ -92,12 +92,17 @@ pkg_check_modules(X11 REQUIRED x11)
 
 include(FindZLIB REQUIRED)
 
+add_subdirectory(${CMAKE_SOURCE_DIR}/deps/verbose-spork ${CMAKE_BINARY_DIR}/sysobj)
+
 include_directories(
 	${CMAKE_SOURCE_DIR}
 	${CMAKE_SOURCE_DIR}/includes
 	${CMAKE_SOURCE_DIR}/includes/${HARDINFO_ARCH}
 	${CMAKE_SOURCE_DIR}/deps/uber-graph
+	${CMAKE_SOURCE_DIR}/deps/verbose-spork/sysobj/include
+	${CMAKE_SOURCE_DIR}/deps/verbose-spork/gui
 	${CMAKE_BINARY_DIR}
+	${CMAKE_BINARY_DIR}/sysobj
 	${GTK_INCLUDE_DIRS}
 	${LIBSOUP_INCLUDE_DIRS}
 	${ZLIB_INCLUDE_DIRS}
@@ -118,7 +123,13 @@ set(HARDINFO_MODULES
 set(HARDINFO_RESOURCES
 	"data/benchmark.conf"
 	"data/benchmark.data"
-	"data/vendor.ids"
+	"deps/verbose-spork/data/vendor.ids"
+	"deps/verbose-spork/data/pci.ids"
+	"deps/verbose-spork/data/usb.ids"
+	"deps/verbose-spork/data/dt.ids"
+	"deps/verbose-spork/data/arm.ids"
+	"deps/verbose-spork/data/sdio.ids"
+	"deps/verbose-spork/data/x86.funfacts"
 )
 
 set(HARDINFO_MANPAGES
@@ -240,13 +251,10 @@ add_executable(hardinfo
         hardinfo/hardinfo.c
 	hardinfo/socket.c
 	hardinfo/util.c
-	hardinfo/vendor.c
 	hardinfo/info.c
 	hardinfo/cpu_util.c
 	hardinfo/dmi_util.c
-	hardinfo/dt_util.c
 	hardinfo/x_util.c
-	hardinfo/gpu_util.c
 	hardinfo/udisks2_util.c
 	shell/callbacks.c
 	shell/iconcache.c
@@ -264,6 +272,8 @@ target_link_libraries(hardinfo
 	m
 	${ZLIB_LIBRARIES}
 	${X11_LIBRARIES}
+	sysobj
+	sysobj_widgets
 )
 set_target_properties(hardinfo PROPERTIES COMPILE_FLAGS "-Wno-deprecated-declarations")
 else()
@@ -275,13 +285,10 @@ add_executable(hardinfo
         hardinfo/hardinfo.c
 	hardinfo/socket.c
 	hardinfo/util.c
-	hardinfo/vendor.c
 	hardinfo/info.c
 	hardinfo/cpu_util.c
 	hardinfo/dmi_util.c
-	hardinfo/dt_util.c
 	hardinfo/x_util.c
-	hardinfo/gpu_util.c
 	hardinfo/udisks2_util.c
 	shell/callbacks.c
 	shell/iconcache.c
@@ -298,6 +305,7 @@ target_link_libraries(hardinfo
 	m
 	${ZLIB_LIBRARIES}
 	${X11_LIBRARIES}
+	sysobj
 )
 endif()
 

@@ -789,18 +789,21 @@ gchar **hi_module_get_dependencies(void)
 
 gchar *hi_module_get_summary(void)
 {
-    return g_strdup_printf("[%s]\n"
+    return g_strdup_printf("[#]\n"
+                    "SOFormat=:/extra/vendor_ribbon\n"
+                    "[%s]\n"
                     "Icon=os.png\n"
-                    "Method=computer::getOS\n"
+                    "SOFormat=:/os\n"
                     "[%s]\n"
                     "Icon=processor.png\n"
-                    "Method=devices::getProcessorNameAndDesc\n"
+                    "SOFormat=:/cpu\n"
+                    "SOFormatOpts=%u\n"
                     "[%s]\n"
                     "Icon=memory.png\n"
-                    "Method=devices::getMemoryTotal\n"
+                    "SOFormat=:/meminfo\n"
                     "[%s]\n"
                     "Icon=module.png\n"
-                    "Method=devices::getMotherboard\n"
+                    "SOFormat=:/mobo\n"
                     "[%s]\n"
                     "Icon=monitor.png\n"
                     "Method=computer::getDisplaySummary\n"
@@ -814,7 +817,7 @@ gchar *hi_module_get_summary(void)
                     "Icon=audio.png\n"
                     "Method=computer::getAudioCards\n",
                     _("Operating System"),
-                    _("CPU"), _("RAM"), _("Motherboard"), _("Graphics"),
+                    _("CPU"), params.fmt_opts | FMT_OPT_COMPLETE , _("RAM"), _("Motherboard"), _("Graphics"),
                     _("Storage"), _("Printers"), _("Audio")
                     );
 }

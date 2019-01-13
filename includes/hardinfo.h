@@ -29,6 +29,7 @@
 #include "vendor.h"
 #include "gettext.h"
 #include "info.h"
+#include "sysobj.h"
 
 #define HARDINFO_COPYRIGHT_LATEST_YEAR 2017
 
@@ -74,6 +75,8 @@ struct _ProgramParameters {
   gchar   *path_lib;
   gchar   *path_data;
   gchar   *argv0;
+  int     fmt_opts;
+  gchar   *alt_root;
 };
 
 struct _FileTypes {

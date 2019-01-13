@@ -21,7 +21,7 @@
 #include "hardinfo.h"
 #include "cpu_util.h"
 
-#include "cpubits.c"
+#include "cpubits.h"
 
 #define CPU_TOPO_NULL -9877
 
@@ -46,12 +46,7 @@ int processor_has_flag(gchar * strflags, gchar * strflag)
 }
 
 gchar* get_cpu_str(const gchar* file, gint cpuid) {
-    gchar *tmp0 = NULL;
-    gchar *tmp1 = NULL;
-    tmp0 = g_strdup_printf("/sys/devices/system/cpu/cpu%d/%s", cpuid, file);
-    g_file_get_contents(tmp0, &tmp1, NULL, NULL);
-    g_free(tmp0);
-    return tmp1;
+    return sysobj_raw_from_printf("/sys/devices/system/cpu/cpu%d/%s", cpuid, file);
 }
 
 gint get_cpu_int(const char* item, int cpuid, int null_val) {
@@ -76,7 +71,7 @@ int cpu_procs_cores_threads(int *p, int *c, int *t) {
     cpubits *threads, *cores, *packs;
     char *tmp;
     int i, m, pack_id, core_id;
-    g_file_get_contents("/sys/devices/system/cpu/present", &tmp, NULL, NULL);
+    tmp = sysobj_raw_from_printf("/sys/devices/system/cpu/present");
     if (tmp != NULL) {
         threads = cpubits_from_str(tmp);
         cores = cpubits_from_str("");
