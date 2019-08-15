@@ -188,6 +188,8 @@ set(MODULE_benchmark_SOURCES_GTKANY
 	modules/benchmark/sha1.c
 	modules/benchmark/zlib.c
 	modules/benchmark/sysbench.c
+	modules/benchmark/flopsx.c
+	modules/benchmark/flops_hi.c
 )
 set(MODULE_benchmark_SOURCES_GTK2
 	modules/benchmark/drawing.c
@@ -204,6 +206,7 @@ set_source_files_properties(
 	modules/benchmark/fftbench.c
 	modules/benchmark/md5.c
 	modules/benchmark/sha1.c
+	modules/benchmark/flopsx.c
 	PROPERTIES
 	COMPILE_FLAGS "-O0"
 )

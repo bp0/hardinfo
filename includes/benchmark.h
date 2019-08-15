@@ -11,6 +11,9 @@ enum {
     BENCHMARK_BLOWFISH_THREADS,
     BENCHMARK_BLOWFISH_CORES,
     BENCHMARK_ZLIB,
+    BENCHMARK_FLOPS_SINGLE,
+    BENCHMARK_FLOPS_MULTI,
+    BENCHMARK_FLOPS_CORES,
     BENCHMARK_CRYPTOHASH,
     BENCHMARK_FIB,
     BENCHMARK_NQUEENS,
@@ -43,6 +46,9 @@ void benchmark_gui(void);
 void benchmark_nqueens(void);
 void benchmark_raytrace(void);
 void benchmark_zlib(void);
+void benchmark_flops_single(void);
+void benchmark_flops_multi(void);
+void benchmark_flops_cores(void);
 
 typedef struct {
     double result;

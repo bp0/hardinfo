@@ -53,6 +53,9 @@ BENCH_SIMPLE(BENCHMARK_SBCPU_QUAD, "SysBench CPU (Four threads)", benchmark_sbcp
 BENCH_SIMPLE(BENCHMARK_MEMORY_SINGLE, "SysBench Memory (Single-thread)", benchmark_memory_single, 1);
 BENCH_SIMPLE(BENCHMARK_MEMORY_DUAL, "SysBench Memory (Two threads)", benchmark_memory_dual, 1);
 BENCH_SIMPLE(BENCHMARK_MEMORY_QUAD, "SysBench Memory", benchmark_memory_quad, 1);
+BENCH_SIMPLE(BENCHMARK_FLOPS_SINGLE, "FPU (Single-thread)", benchmark_flops_single, 1);
+BENCH_SIMPLE(BENCHMARK_FLOPS_MULTI, "FPU (Multi-thread)", benchmark_flops_multi, 1);
+BENCH_SIMPLE(BENCHMARK_FLOPS_CORES, "FPU (Multi-core)", benchmark_flops_cores, 1);
 
 #if !GTK_CHECK_VERSION(3,0,0)
 BENCH_CALLBACK(callback_gui, "GPU Drawing", BENCHMARK_GUI, 1);
@@ -86,6 +89,12 @@ static ModuleEntry entries[] = {
     {N_("CPU Blowfish (Multi-core)"), "blowfish.png", callback_benchmark_bfish_cores, scan_benchmark_bfish_cores, MODULE_FLAG_NONE},
     [BENCHMARK_ZLIB] =
     {N_("CPU Zlib"), "file-roller.png", callback_benchmark_zlib, scan_benchmark_zlib, MODULE_FLAG_NONE},
+    [BENCHMARK_FLOPS_SINGLE] =
+    {N_("FPU (Single-thread)"), "benchmark.png", callback_benchmark_flops_single, scan_benchmark_flops_single, MODULE_FLAG_NONE},
+    [BENCHMARK_FLOPS_MULTI] =
+    {N_("FPU (Multi-thread)"), "benchmark.png", callback_benchmark_flops_multi, scan_benchmark_flops_multi, MODULE_FLAG_NONE},
+    [BENCHMARK_FLOPS_CORES] =
+    {N_("#FPU (Multi-core)"), "benchmark.png", callback_benchmark_flops_cores, scan_benchmark_flops_cores, MODULE_FLAG_NONE},
     [BENCHMARK_CRYPTOHASH] =
     {N_("CPU CryptoHash"), "cryptohash.png", callback_benchmark_cryptohash, scan_benchmark_cryptohash, MODULE_FLAG_NONE},
     [BENCHMARK_FIB] =
@@ -125,6 +134,11 @@ const gchar *hi_note_func(gint entry)
     case BENCHMARK_SBCPU_ALL:
         return _("Alexey Kopytov's <i><b>sysbench</b></i> is required.\n"
                  "Results in events/second. Higher is better.");
+
+    case BENCHMARK_FLOPS_SINGLE:
+    case BENCHMARK_FLOPS_MULTI:
+    case BENCHMARK_FLOPS_CORES:
+        return _("Al Aburto's flops.c 2.0 \"MFLOPS(3)\"\nResult in double-precision MFLOPS. Higher is better.");
 
     case BENCHMARK_MEMORY_SINGLE:
     case BENCHMARK_MEMORY_DUAL:

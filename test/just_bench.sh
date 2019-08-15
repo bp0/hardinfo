@@ -32,6 +32,9 @@ if [ ! -z `which sysbench` ]; then
     do_hi_bench "SysBench Memory"
 fi
 
+do_hi_bench "FPU (Single-thread)"
+do_hi_bench "FPU (Multi-thread)"
+#do_hi_bench "FPU (Multi-core)"
 do_hi_bench "CPU Blowfish (Single-thread)"
 do_hi_bench "CPU Blowfish (Multi-thread)"
 do_hi_bench "CPU Blowfish (Multi-core)"
